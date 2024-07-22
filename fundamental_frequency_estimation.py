@@ -2,17 +2,16 @@ import numpy as np
 import audioflux as af
 import matplotlib.pyplot as plt
 
-audio_path = 'raga2.wav'  # Replace with your audio file path
+audio_path = 'raga2.wav'
 audio_arr, sr = af.read(audio_path)
 
 pitch_obj = af.PitchYIN(samplate=sr, low_fre=20, high_fre=2000)
 
 fre_arr, _, _ = pitch_obj.pitch(audio_arr)
 
-# Remove zeros and very low frequencies
 fre_arr = fre_arr[fre_arr > 20]
 
-# Generate standard C# frequencies (A-440 Hz scale)
+# Generate standard 12 tone equal temperament frequencies (A-440 Hz scale)
 base_c_sharp = 440 * 2**(4/12)
 c_sharp_freqs_standard = base_c_sharp * np.power(2.0, np.arange(-5, 6))  # Covers 11 octaves centered around the base C#
 
@@ -20,14 +19,12 @@ def find_closest_c_sharp(freq):
     index = np.argmin(np.abs(c_sharp_freqs_standard - freq))
     return c_sharp_freqs_standard[index]
 
-# Analyze each detected frequency
 deviations = []
 for freq in fre_arr:
     closest_c_sharp = find_closest_c_sharp(freq)
     deviation = freq - closest_c_sharp
     deviations.append((freq, closest_c_sharp, deviation))
 
-# Sort deviations by frequency
 deviations.sort(key=lambda x: x[0])
 
 
@@ -35,7 +32,6 @@ abs_deviations = [(d[2]) for d in deviations]
 avg_deviation = np.mean(abs_deviations)
 print(f"\nAverage absolute deviation for all frequencies: {avg_deviation:.2f} Hz")
 
-# Find frequencies with less than 2 Hz deviation
 close_deviations = [(d[0], d[1], d[2]) for d in deviations if abs(d[2]) < 2]
 
 if close_deviations:
